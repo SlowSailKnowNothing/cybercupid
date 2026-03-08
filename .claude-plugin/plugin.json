@@ -1,0 +1,10 @@
+{
+  "name": "cybercupid",
+  "description": "CyberCupid AI 约会教练 - 毒舌但温暖的社交成长教官",
+  "author": { "name": "SlowSailKnowNothing" },
+  "homepage": "https://github.com/SlowSailKnowNothing/cybercupid",
+  "repository": "https://github.com/SlowSailKnowNothing/cybercupid",
+  "license": "MIT",
+  "keywords": ["dating-coach", "ai-coach", "social-skills", "cybercupid"],
+  "skills": "./skills"
+}

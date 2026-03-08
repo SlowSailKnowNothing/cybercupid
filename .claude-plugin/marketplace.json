@@ -1,0 +1,19 @@
+{
+  "name": "cybercupid",
+  "owner": { "name": "SlowSailKnowNothing" },
+  "metadata": {
+    "description": "AI 约会教练技能 - 深度访谈、任务系统、模拟约会、游戏化"
+  },
+  "plugins": [{
+    "name": "cybercupid",
+    "source": "./",
+    "description": "毒舌但温暖的 AI 约会教练",
+    "author": { "name": "SlowSailKnowNothing" },
+    "homepage": "https://github.com/SlowSailKnowNothing/cybercupid",
+    "repository": "https://github.com/SlowSailKnowNothing/cybercupid",
+    "license": "MIT",
+    "keywords": ["dating", "coach", "social"],
+    "category": "lifestyle",
+    "tags": ["dating-coach", "ai-coach", "gamification", "chinese"]
+  }]
+}
