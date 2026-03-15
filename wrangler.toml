@@ -1,0 +1,11 @@
+name = "cybercupid-web"
+main = "src/index.ts"
+compatibility_date = "2025-03-01"
+
+[vars]
+JWT_SECRET = "change-me-in-production-use-wrangler-secret"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "cybercupid-db"
+database_id = "local-dev-placeholder"
