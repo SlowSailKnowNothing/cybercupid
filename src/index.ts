@@ -1,5 +1,5 @@
 /**
- * @source cursor @line_count 55
+ * @source cursor @line_count 50
  */
 
 import { Hono } from 'hono';
@@ -20,13 +20,6 @@ app.use('*', cors({
   allowHeaders: ['Content-Type', 'Authorization'],
 }));
 
-app.route('/api/auth', auth);
-
-app.use('/api/*', authMiddleware);
-app.route('/api/chat', chat);
-app.route('/api/settings', settings);
-app.route('/api/profile', profile);
-
 app.get('/api/health', (c) => {
   return c.json({ status: 'ok', version: '1.0.0', name: 'CyberCupid Web' });
 });
@@ -35,6 +28,17 @@ app.get('/api/question-bank', async (c) => {
   const questionBank = await import('./question-bank.json');
   return c.json(questionBank.default || questionBank);
 });
+
+app.route('/api/auth', auth);
+
+app.use('/api/chat/*', authMiddleware);
+app.use('/api/settings/*', authMiddleware);
+app.use('/api/settings', authMiddleware);
+app.use('/api/profile/*', authMiddleware);
+app.use('/api/profile', authMiddleware);
+app.route('/api/chat', chat);
+app.route('/api/settings', settings);
+app.route('/api/profile', profile);
 
 app.get('*', (c) => {
   return serveStatic(c);

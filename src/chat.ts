@@ -5,9 +5,18 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { zValidator } from '@hono/zod-validator';
-import type { Env, JwtPayload, UserSettings, Message } from './types';
+import type { Env, JwtPayload, UserSettings, Message, RadarData } from './types';
 import { callLLM, type LLMMessage } from './llm';
 import { SYSTEM_PROMPT, getModulePrompt } from './prompt';
+
+function safeJsonParse<T>(str: string | null | undefined, fallback: T): T {
+  if (!str) return fallback;
+  try {
+    return JSON.parse(str) as T;
+  } catch {
+    return fallback;
+  }
+}
 
 const chat = new Hono<{ Bindings: Env }>();
 
@@ -35,7 +44,7 @@ chat.get('/conversations', async (c) => {
 
 chat.get('/conversations/:id', async (c) => {
   const payload = c.get('jwtPayload' as never) as JwtPayload;
-  const id = parseInt(c.req.param('id'));
+  const id = parseInt(c.req.param('id'), 10);
   const db = c.env.DB;
 
   const conversation = await db
@@ -59,12 +68,21 @@ chat.get('/conversations/:id', async (c) => {
 
 chat.delete('/conversations/:id', async (c) => {
   const payload = c.get('jwtPayload' as never) as JwtPayload;
-  const id = parseInt(c.req.param('id'));
+  const id = parseInt(c.req.param('id'), 10);
   const db = c.env.DB;
 
-  await db
-    .prepare('DELETE FROM messages WHERE conversation_id = ? AND conversation_id IN (SELECT id FROM conversations WHERE user_id = ?)')
+  const conv = await db
+    .prepare('SELECT id FROM conversations WHERE id = ? AND user_id = ?')
     .bind(id, payload.userId)
+    .first();
+
+  if (!conv) {
+    return c.json({ error: '对话不存在' }, 404);
+  }
+
+  await db
+    .prepare('DELETE FROM messages WHERE conversation_id = ?')
+    .bind(id)
     .run();
 
   await db
@@ -146,7 +164,8 @@ chat.post('/send', zValidator('json', sendMessageSchema), async (c) => {
   }
 
   if (profile) {
-    const radar = JSON.parse((profile.radar_data as string) || '{}');
+    const defaultRadar: RadarData = { image_mgmt: 5, emotional_stability: 5, communication: 5, execution: 5, life_richness: 5 };
+    const radar = safeJsonParse<RadarData>(profile.radar_data as string, defaultRadar);
     systemContent += `\n\n## 用户当前状态
 - 等级: Lv.${profile.level}
 - EXP: ${profile.exp}
@@ -198,8 +217,10 @@ chat.post('/send', zValidator('json', sendMessageSchema), async (c) => {
       },
       usage: response.usage,
     });
-  } catch (error: any) {
-    return c.json({ error: error.message || 'LLM 调用失败' }, 500);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'LLM 调用失败';
+    const safeMessage = message.length > 200 ? message.slice(0, 200) + '...' : message;
+    return c.json({ error: safeMessage }, 500);
   }
 });
 

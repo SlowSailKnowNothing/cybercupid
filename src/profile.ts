@@ -9,6 +9,15 @@ import type { Env, JwtPayload } from './types';
 
 const profile = new Hono<{ Bindings: Env }>();
 
+function safeJsonParse<T>(str: string | null | undefined, fallback: T): T {
+  if (!str) return fallback;
+  try {
+    return JSON.parse(str) as T;
+  } catch {
+    return fallback;
+  }
+}
+
 profile.get('/', async (c) => {
   const payload = c.get('jwtPayload' as never) as JwtPayload;
   const db = c.env.DB;
@@ -27,8 +36,8 @@ profile.get('/', async (c) => {
   return c.json({
     profile: userProfile,
     level: levelInfo,
-    badges: JSON.parse((userProfile.badges as string) || '[]'),
-    radar: JSON.parse((userProfile.radar_data as string) || '{}'),
+    badges: safeJsonParse(userProfile.badges as string, []),
+    radar: safeJsonParse(userProfile.radar_data as string, {}),
   });
 });
 
@@ -50,7 +59,7 @@ profile.put('/radar', zValidator('json', updateRadarSchema), async (c) => {
     .bind(payload.userId)
     .first<{ radar_data: string }>();
 
-  const radar = JSON.parse(current?.radar_data || '{}');
+  const radar = safeJsonParse(current?.radar_data, {});
   const updated = { ...radar, ...data };
 
   await db
@@ -63,7 +72,7 @@ profile.put('/radar', zValidator('json', updateRadarSchema), async (c) => {
   return c.json({ success: true, radar: updated });
 });
 
-profile.post('/add-exp', zValidator('json', z.object({ amount: z.number().min(0) })), async (c) => {
+profile.post('/add-exp', zValidator('json', z.object({ amount: z.number().min(0).max(100) })), async (c) => {
   const payload = c.get('jwtPayload' as never) as JwtPayload;
   const { amount } = c.req.valid('json');
   const db = c.env.DB;

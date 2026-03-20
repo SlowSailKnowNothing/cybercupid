@@ -1368,15 +1368,15 @@ async function showSettings() {
         <div class="settings-section">
           <h4>模型提供商</h4>
           <div class="provider-cards">
-            <div class="provider-card \${currentProvider==='deepseek'?'selected':''}" onclick="selectProvider('deepseek')">
+            <div class="provider-card \${currentProvider==='deepseek'?'selected':''}" onclick="selectProvider('deepseek', this)">
               <div class="pc-icon">🐋</div>
               <div class="pc-name">DeepSeek</div>
             </div>
-            <div class="provider-card \${currentProvider==='gemini'?'selected':''}" onclick="selectProvider('gemini')">
+            <div class="provider-card \${currentProvider==='gemini'?'selected':''}" onclick="selectProvider('gemini', this)">
               <div class="pc-icon">✨</div>
               <div class="pc-name">Gemini</div>
             </div>
-            <div class="provider-card \${currentProvider==='custom'?'selected':''}" onclick="selectProvider('custom')">
+            <div class="provider-card \${currentProvider==='custom'?'selected':''}" onclick="selectProvider('custom', this)">
               <div class="pc-icon">🔧</div>
               <div class="pc-name">自定义</div>
             </div>
@@ -1419,10 +1419,10 @@ async function showSettings() {
 
 window._settingsProvider = null;
 
-function selectProvider(provider) {
+function selectProvider(provider, el) {
   window._settingsProvider = provider;
   document.querySelectorAll('.provider-card').forEach(c => c.classList.remove('selected'));
-  event.currentTarget.classList.add('selected');
+  if (el) el.classList.add('selected');
 
   const customSection = document.getElementById('customSection');
   if (provider === 'custom') {

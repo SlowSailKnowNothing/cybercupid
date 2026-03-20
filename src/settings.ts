@@ -40,6 +40,11 @@ settings.get('/', async (c) => {
   return c.json({ settings: maskedSettings, models: getAvailableModels() });
 });
 
+const ALLOWED_SETTING_COLUMNS = new Set([
+  'llm_provider', 'model_name', 'api_key',
+  'custom_provider_url', 'custom_model_name', 'language',
+]);
+
 settings.put('/', zValidator('json', updateSettingsSchema), async (c) => {
   const payload = c.get('jwtPayload' as never) as JwtPayload;
   const data = c.req.valid('json');
@@ -49,7 +54,7 @@ settings.put('/', zValidator('json', updateSettingsSchema), async (c) => {
   const values: unknown[] = [];
 
   for (const [key, value] of Object.entries(data)) {
-    if (value !== undefined) {
+    if (value !== undefined && ALLOWED_SETTING_COLUMNS.has(key)) {
       fields.push(`${key} = ?`);
       values.push(value);
     }
